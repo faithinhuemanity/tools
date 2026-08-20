@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cycle Timer</title>
+
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #121821;
+      --panel-2: #18212d;
+      --text: #f3f7fb;
+      --muted: #9fb0c3;
+      --accent: #56c2ff;
+      --good: #62e6a6;
+      --warn: #ffd166;
+      --danger: #ff5252;
+      --border: #2a3645;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #0b0f14 0%, #101722 100%);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 24px;
+      overflow-x: hidden;
+    }
+
+    #screenFlash {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 999;
+      mix-blend-mode: screen;
+    }
+
+    #screenFlash.count-flash {
+      background: rgba(255, 209, 102, 0.33);
+      animation: screen-count-flash 520ms ease-out;
+    }
+
+    #screenFlash.reset-flash {
+      background: rgba(255, 50, 50, 0.44);
+      animation: screen-reset-flash 760ms ease-out;
+    }
+
+    @keyframes screen-count-flash {
+      0% { opacity: 0; }
+      18% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    @keyframes screen-reset-flash {
+      0% { opacity: 0; }
+      15% { opacity: 1; }
+      36% { opacity: 0.25; }
+      52% { opacity: 0.85; }
+      100% { opacity: 0; }
+    }
+
+    .app {
+      width: min(980px, 100%);
+    }
+
+    h1 {
+      margin: 0 0 18px;
+      font-size: clamp(28px, 4vw, 42px);
+      letter-spacing: 0.04em;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .field, .card, .progress-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      will-change: transform;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .unit {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 6px;
+    }
+
+    input {
+      width: 100%;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      padding: 12px;
+      font-size: 22px;
+      outline: none;
+      font-variant-numeric: tabular-nums;
+    }
+
+    input:focus { border-color: var(--accent); }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .card-title {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .value {
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(30px, 5vw, 48px);
+      font-weight: 800;
+    }
+
+    .ready {
+      grid-column: 1 / -1;
+      border-color: #356b83;
+      background: #102330;
+    }
+
+    .ready .value {
+      font-size: clamp(42px, 8vw, 76px);
+      color: var(--accent);
+    }
+
+    .counter .value { color: var(--good); }
+
+    .counter-row {
+      display: grid;
+      grid-template-columns: 44px minmax(70px, 1fr) 44px;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .count-adjust {
+      height: 44px;
+      width: 44px;
+      padding: 0;
+      min-height: unset;
+      flex: none;
+      border-radius: 11px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    .count-adjust:hover { border-color: var(--accent); }
+
+    .count-number { text-align: center; }
+
+    .progress-panel {
+      margin-top: 12px;
+      overflow: hidden;
+    }
+
+    .progress-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      margin-bottom: 12px;
+    }
+
+    .progress-caption {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .progress-track {
+      position: relative;
+      height: 24px;
+      border: 1px solid var(--border);
+      background: #091018;
+      border-radius: 999px;
+      overflow: visible;
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,0.02);
+    }
+
+    .progress-fill {
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #d9a900 0%, var(--warn) 70%, #fff0a3 100%);
+      transition: width 80ms linear;
+      overflow: hidden;
+    }
+
+    .progress-fill::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      transform: translateX(-100%);
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255,255,255,0.08) 35%,
+        rgba(255,255,255,0.55) 50%,
+        rgba(255,255,255,0.08) 65%,
+        transparent 100%
+      );
+      animation: progress-sheen 1.6s linear infinite;
+    }
+
+    @keyframes progress-sheen {
+      to { transform: translateX(100%); }
+    }
+
+    .progress-marker {
+      position: absolute;
+      top: -5px;
+      bottom: -5px;
+      width: 2px;
+      background: rgba(243,247,251,0.55);
+      z-index: 3;
+      border-radius: 2px;
+    }
+
+    .progress-dot {
+      position: absolute;
+      top: 50%;
+      left: 0%;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff7cd;
+      border: 3px solid var(--warn);
+      transform: translate(-50%, -50%);
+      z-index: 5;
+      box-shadow: 0 0 18px rgba(255, 209, 102, 0.75);
+      transition: left 80ms linear;
+    }
+
+    .progress-panel.reset-pop .progress-track {
+      animation: reset-track-pop 780ms cubic-bezier(.2,.8,.2,1);
+    }
+
+    .progress-panel.reset-pop .progress-dot {
+      animation: reset-dot-bounce 780ms cubic-bezier(.2,.8,.2,1);
+      background: #ffd1d1;
+      border-color: var(--danger);
+      box-shadow: 0 0 22px rgba(255, 82, 82, 0.95);
+    }
+
+    @keyframes reset-track-pop {
+      0% { transform: scaleX(1); }
+      18% { transform: scaleX(1.015) scaleY(1.2); }
+      38% { transform: scaleX(0.985) scaleY(0.92); }
+      62% { transform: scaleX(1.008) scaleY(1.08); }
+      100% { transform: scaleX(1) scaleY(1); }
+    }
+
+    @keyframes reset-dot-bounce {
+      0% { transform: translate(-50%, -50%) scale(1); }
+      25% { transform: translate(-50%, -50%) scale(1.55) rotate(12deg); }
+      50% { transform: translate(-50%, -50%) scale(0.82) rotate(-8deg); }
+      75% { transform: translate(-50%, -50%) scale(1.18) rotate(4deg); }
+      100% { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    button {
+      flex: 1 1 140px;
+      min-height: 54px;
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+      will-change: transform;
+    }
+
+    #startBtn { background: var(--good); color: #08120e; }
+    #pauseBtn { background: var(--warn); color: #181305; }
+    #resetBtn { background: var(--danger); color: #1a0808; }
+
+    .timing-adjustments {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .timing-adjustments button {
+      flex: 0 1 220px;
+      min-width: 160px;
+      background: var(--panel-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .timing-adjustments button:hover { border-color: var(--accent); }
+
+    #speedUpBtn span,
+    #slowDownBtn span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 3px;
+    }
+
+    .volume-control {
+      margin-top: 12px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .volume-label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .volume-label-row label {
+      margin: 0;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    #volumeValue {
+      font-weight: 800;
+      color: var(--warn);
+      font-variant-numeric: tabular-nums;
+    }
+
+    #volumeSlider {
+      width: 100%;
+      padding: 0;
+      height: 8px;
+      accent-color: var(--warn);
+      cursor: pointer;
+    }
+
+    .status-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .status {
+      color: var(--muted);
+      min-height: 22px;
+    }
+
+    .tab-state {
+      color: var(--muted);
+      font-size: 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 9px;
+      background: rgba(18,24,33,0.75);
+    }
+
+    .tab-state.hidden-warning {
+      color: var(--warn);
+      border-color: rgba(255,209,102,0.45);
+    }
+
+    .bump-left {
+      animation: bumper-left 440ms cubic-bezier(.2,.8,.2,1);
+      animation-delay: var(--bump-delay, 0ms);
+    }
+
+    .bump-right {
+      animation: bumper-right 440ms cubic-bezier(.2,.8,.2,1);
+      animation-delay: var(--bump-delay, 0ms);
+    }
+
+    @keyframes bumper-left {
+      0%   { transform: translateX(0); }
+      28%  { transform: translateX(-9px); }
+      52%  { transform: translateX(6px); }
+      74%  { transform: translateX(-3px); }
+      90%  { transform: translateX(1.2px); }
+      100% { transform: translateX(0); }
+    }
+
+    @keyframes bumper-right {
+      0%   { transform: translateX(0); }
+      28%  { transform: translateX(9px); }
+      52%  { transform: translateX(-6px); }
+      74%  { transform: translateX(3px); }
+      90%  { transform: translateX(-1.2px); }
+      100% { transform: translateX(0); }
+    }
+
+    @media (max-width: 720px) {
+      .grid, .metrics { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 12px; }
+      .grid, .metrics { grid-template-columns: 1fr; }
+      .ready { grid-column: auto; }
+      .timing-adjustments { flex-direction: column; }
+      .timing-adjustments button {
+        width: 100%;
+        max-width: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="screenFlash" aria-hidden="true"></div>
+
+  <main class="app">
+    <h1>Cycle Timer</h1>
+    <div class="subtitle">AT + SD + BED = time for each cycle. RC controls the full reset.</div>
+
+    <section class="grid">
+      <div class="field bumpable">
+        <label for="at">AT</label>
+        <input id="at" type="number" min="0" step="0.001" value="0.500" />
+        <div class="unit">decimal minutes</div>
+      </div>
+
+      <div class="field bumpable">
+        <label for="sd">SD</label>
+        <input id="sd" type="number" min="0" step="0.001" value="7.000" />
+        <div class="unit">seconds</div>
+      </div>
+
+      <div class="field bumpable">
+        <label for="bed">BED</label>
+        <input id="bed" type="number" min="0" step="0.001" value="1.000" />
+        <div class="unit">seconds</div>
+      </div>
+
+      <div class="field bumpable">
+        <label for="rc">RC</label>
+        <input id="rc" type="number" min="1" step="1" value="5" />
+        <div class="unit">cycle count before full reset</div>
+      </div>
+    </section>
+
+    <section class="metrics">
+      <div class="card bumpable">
+        <div class="card-title">Time for each</div>
+        <div class="value" id="eachTime">00:38.000</div>
+      </div>
+
+      <div class="card counter bumpable">
+        <div class="card-title">Current count</div>
+        <div class="counter-row">
+          <button class="count-adjust bumpable" id="countMinusBtn" aria-label="Decrease count">−</button>
+          <div class="value count-number" id="countDisplay">0</div>
+          <button class="count-adjust bumpable" id="countPlusBtn" aria-label="Increase count">+</button>
+        </div>
+      </div>
+
+      <div class="card bumpable">
+        <div class="card-title">Current interval remaining</div>
+        <div class="value" id="intervalRemaining">00:38.000</div>
+      </div>
+
+      <div class="card bumpable">
+        <div class="card-title">Total time</div>
+        <div class="value" id="totalTime">03:10.000</div>
+      </div>
+
+      <div class="card ready bumpable" id="readyCard">
+        <div class="card-title">Time till ready</div>
+        <div class="value" id="readyTime">03:10.000</div>
+      </div>
+    </section>
+
+    <section class="progress-panel bumpable" id="progressPanel">
+      <div class="progress-head">
+        <div>
+          <div class="card-title">Sequence progress</div>
+          <div class="progress-caption" id="progressCaption">Count 0 of 5</div>
+        </div>
+        <div class="progress-caption" id="progressPercent">0.0%</div>
+      </div>
+
+      <div class="progress-track" id="progressTrack">
+        <div class="progress-fill" id="progressFill"></div>
+        <div id="progressMarkers"></div>
+        <div class="progress-dot" id="progressDot"></div>
+      </div>
+    </section>
+
+    <section class="controls">
+      <button class="bumpable" id="startBtn">START</button>
+      <button class="bumpable" id="pauseBtn">PAUSE</button>
+      <button class="bumpable" id="resetBtn">RESET</button>
+    </section>
+
+    <section class="timing-adjustments">
+      <button class="bumpable" id="slowDownBtn">
+        ◀ SLOW DOWN
+        <span>add 0.250 sec</span>
+      </button>
+
+      <button class="bumpable" id="speedUpBtn">
+        SPEED UP ▶
+        <span>subtract 0.250 sec</span>
+      </button>
+    </section>
+
+    <section class="volume-control bumpable">
+      <div class="volume-label-row">
+        <label for="volumeSlider">VOLUME</label>
+        <span id="volumeValue">75%</span>
+      </div>
+      <input
+        id="volumeSlider"
+        type="range"
+        min="0"
+        max="100"
+        step="1"
+        value="75"
+        aria-label="Alarm volume"
+      />
+    </section>
+
+    <div class="status-row">
+      <div class="status" id="status">Ready.</div>
+      <div class="tab-state" id="tabState">Timer tab visible</div>
+    </div>
+  </main>
+
+  <script>
+    const ADJUST_STEP_MS = 250;
+    const AUDIO_LOOKAHEAD_MS = 5 * 60 * 1000;
+    const MAX_SCHEDULED_EVENTS = 1000;
+
+    const atInput = document.getElementById("at");
+    const sdInput = document.getElementById("sd");
+    const bedInput = document.getElementById("bed");
+    const rcInput = document.getElementById("rc");
+
+    const eachTimeEl = document.getElementById("eachTime");
+    const countDisplayEl = document.getElementById("countDisplay");
+    const intervalRemainingEl = document.getElementById("intervalRemaining");
+    const totalTimeEl = document.getElementById("totalTime");
+    const readyTimeEl = document.getElementById("readyTime");
+
+    const progressPanel = document.getElementById("progressPanel");
+    const progressFill = document.getElementById("progressFill");
+    const progressDot = document.getElementById("progressDot");
+    const progressMarkers = document.getElementById("progressMarkers");
+    const progressCaption = document.getElementById("progressCaption");
+    const progressPercent = document.getElementById("progressPercent");
+
+    const statusEl = document.getElementById("status");
+    const tabStateEl = document.getElementById("tabState");
+    const screenFlash = document.getElementById("screenFlash");
+
+    const startBtn = document.getElementById("startBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const speedUpBtn = document.getElementById("speedUpBtn");
+    const slowDownBtn = document.getElementById("slowDownBtn");
+    const countMinusBtn = document.getElementById("countMinusBtn");
+    const countPlusBtn = document.getElementById("countPlusBtn");
+    const volumeSlider = document.getElementById("volumeSlider");
+    const volumeValue = document.getElementById("volumeValue");
+
+    let running = false;
+    let runStartedAt = 0;
+    let baseElapsedMs = 0;
+    let manualOffsetMs = 0;
+    let animationId = null;
+    let lastVisualBoundary = 0;
+
+    let audioCtx = null;
+    let masterGain = null;
+    let countBuffer = null;
+    let resetBuffer = null;
+    let scheduledAudioNodes = [];
+    let audioScheduleTimer = null;
+    let audioLoadPromise = null;
+
+    function mod(value, divisor) {
+      return ((value % divisor) + divisor) % divisor;
+    }
+
+    function getValues() {
+      const atMinutes = Math.max(0, Number(atInput.value) || 0);
+      const sdSeconds = Math.max(0, Number(sdInput.value) || 0);
+      const bedSeconds = Math.max(0, Number(bedInput.value) || 0);
+      const rc = Math.max(1, Math.floor(Number(rcInput.value) || 1));
+
+      const eachMs = ((atMinutes * 60) + sdSeconds + bedSeconds) * 1000;
+      const totalMs = eachMs * rc;
+
+      return { eachMs, totalMs, rc };
+    }
+
+    function getElapsedMs() {
+      const movingMs = running ? (performance.now() - runStartedAt) : 0;
+      return Math.max(0, baseElapsedMs + movingMs + manualOffsetMs);
+    }
+
+    function setElapsedMs(newElapsedMs) {
+      const safeElapsed = Math.max(0, newElapsedMs);
+      baseElapsedMs = safeElapsed;
+      manualOffsetMs = 0;
+
+      if (running) {
+        runStartedAt = performance.now();
+      }
+
+      syncVisualBoundary();
+      refreshAudioSchedule();
+    }
+
+    function formatTime(ms) {
+      ms = Math.max(0, ms);
+
+      const totalMilliseconds = Math.floor(ms);
+      const milliseconds = totalMilliseconds % 1000;
+      const totalSeconds = Math.floor(totalMilliseconds / 1000);
+      const seconds = totalSeconds % 60;
+      const totalMinutes = Math.floor(totalSeconds / 60);
+      const minutes = totalMinutes % 60;
+      const hours = Math.floor(totalMinutes / 60);
+
+      const msText = String(milliseconds).padStart(3, "0");
+      const secText = String(seconds).padStart(2, "0");
+      const minText = String(minutes).padStart(2, "0");
+
+      if (hours > 0) {
+        return `${String(hours).padStart(2, "0")}:${minText}:${secText}.${msText}`;
+      }
+
+      return `${minText}:${secText}.${msText}`;
+    }
+
+    function renderMarkers(rc) {
+      progressMarkers.innerHTML = "";
+
+      for (let i = 1; i < rc; i++) {
+        const marker = document.createElement("div");
+        marker.className = "progress-marker";
+        marker.style.left = `${(i / rc) * 100}%`;
+        progressMarkers.appendChild(marker);
+      }
+    }
+
+    function updateStaticLabels() {
+      const { eachMs, totalMs, rc } = getValues();
+      eachTimeEl.textContent = formatTime(eachMs);
+      totalTimeEl.textContent = formatTime(totalMs);
+      renderMarkers(rc);
+    }
+
+    function updateDisplay() {
+      const { eachMs, totalMs, rc } = getValues();
+
+      if (eachMs <= 0 || totalMs <= 0) {
+        countDisplayEl.textContent = "0";
+        intervalRemainingEl.textContent = formatTime(0);
+        readyTimeEl.textContent = formatTime(0);
+        progressFill.style.width = "0%";
+        progressDot.style.left = "0%";
+        progressCaption.textContent = "Enter a cycle time";
+        progressPercent.textContent = "0.0%";
+        return;
+      }
+
+      const elapsedMs = getElapsedMs();
+      const sequenceElapsed = mod(elapsedMs, totalMs);
+      const currentCount = Math.floor(sequenceElapsed / eachMs);
+      const elapsedInCurrentCycle = mod(sequenceElapsed, eachMs);
+
+      const intervalRemaining = eachMs - elapsedInCurrentCycle;
+      const timeTillReady = totalMs - sequenceElapsed;
+
+      const progress = Math.min(1, Math.max(0, sequenceElapsed / totalMs));
+      const percent = progress * 100;
+
+      countDisplayEl.textContent = currentCount;
+      intervalRemainingEl.textContent = formatTime(intervalRemaining);
+      readyTimeEl.textContent = formatTime(timeTillReady);
+
+      progressFill.style.width = `${percent}%`;
+      progressDot.style.left = `${percent}%`;
+      progressCaption.textContent = `Count ${currentCount} of ${rc}`;
+      progressPercent.textContent = `${percent.toFixed(1)}%`;
+    }
+
+    function bumpAll(direction) {
+      const className = direction === "left" ? "bump-left" : "bump-right";
+      const opposite = direction === "left" ? "bump-right" : "bump-left";
+
+      document.querySelectorAll(".bumpable").forEach((element, index) => {
+        element.classList.remove(className, opposite);
+        element.style.setProperty("--bump-delay", `${Math.min(index * 7, 70)}ms`);
+        void element.offsetWidth;
+        element.classList.add(className);
+
+        window.setTimeout(() => {
+          element.classList.remove(className);
+        }, 560 + Math.min(index * 7, 70));
+      });
+    }
+
+    function flashScreen(type) {
+      screenFlash.classList.remove("count-flash", "reset-flash");
+      void screenFlash.offsetWidth;
+      screenFlash.classList.add(type === "reset" ? "reset-flash" : "count-flash");
+
+      if (type === "reset") {
+        progressPanel.classList.remove("reset-pop");
+        void progressPanel.offsetWidth;
+        progressPanel.classList.add("reset-pop");
+
+        window.setTimeout(() => {
+          progressPanel.classList.remove("reset-pop");
+        }, 900);
+      }
+    }
+
+    function syncVisualBoundary() {
+      const { eachMs } = getValues();
+
+      if (eachMs > 0) {
+        lastVisualBoundary = Math.floor(getElapsedMs() / eachMs);
+      } else {
+        lastVisualBoundary = 0;
+      }
+    }
+
+    function checkVisualBoundary() {
+      if (!running) return;
+
+      const { eachMs, rc } = getValues();
+      if (eachMs <= 0) return;
+
+      const absoluteBoundary = Math.floor(getElapsedMs() / eachMs);
+
+      if (absoluteBoundary > lastVisualBoundary) {
+        if (absoluteBoundary % rc === 0) {
+          flashScreen("reset");
+        } else {
+          flashScreen("count");
+        }
+
+        lastVisualBoundary = absoluteBoundary;
+      }
+    }
+
+    function render() {
+      updateDisplay();
+      checkVisualBoundary();
+
+      if (running) {
+        animationId = requestAnimationFrame(render);
+      }
+    }
+
+    function ensureAudioContext() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = Number(volumeSlider.value) / 100;
+        masterGain.connect(audioCtx.destination);
+      }
+
+      return audioCtx;
+    }
+
+    async function fetchAudioBuffer(url) {
+      const response = await fetch(url, { cache: "force-cache" });
+
+      if (!response.ok) {
+        throw new Error(`Could not load ${url}`);
+      }
+
+      const bytes = await response.arrayBuffer();
+      const ctx = ensureAudioContext();
+      return await ctx.decodeAudioData(bytes.slice(0));
+    }
+
+    function preloadAudio() {
+      if (audioLoadPromise) return audioLoadPromise;
+
+      audioLoadPromise = Promise.all([
+        fetchAudioBuffer("audio/Pop - Sound Effect HD.mp3"),
+        fetchAudioBuffer("audio/OVENBELLRINGSOUNDEFFECT.mp3")
+      ])
+      .then(([count, reset]) => {
+        countBuffer = count;
+        resetBuffer = reset;
+        return true;
+      })
+      .catch(error => {
+        console.warn("Custom audio preload failed; generated tones will be used.", error);
+        return false;
+      });
+
+      return audioLoadPromise;
+    }
+
+    function fallbackTone(when, isReset) {
+      const ctx = ensureAudioContext();
+
+      if (isReset) {
+        [620, 1040].forEach((frequency, index) => {
+          const oscillator = ctx.createOscillator();
+          const gain = ctx.createGain();
+
+          oscillator.connect(gain);
+          gain.connect(masterGain);
+
+          oscillator.frequency.value = frequency;
+          gain.gain.value = 0.16;
+
+          const startAt = when + (index * 0.28);
+          oscillator.start(startAt);
+          oscillator.stop(startAt + (index === 0 ? 0.22 : 0.28));
+
+          scheduledAudioNodes.push(oscillator);
+        });
+
+        return;
+      }
+
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      oscillator.connect(gain);
+      gain.connect(masterGain);
+
+      oscillator.frequency.value = 880;
+      gain.gain.value = 0.14;
+
+      oscillator.start(when);
+      oscillator.stop(when + 0.16);
+
+      scheduledAudioNodes.push(oscillator);
+    }
+
+    function scheduleSound(buffer, when, isReset) {
+      const ctx = ensureAudioContext();
+
+      if (!buffer) {
+        fallbackTone(when, isReset);
+        return;
+      }
+
+      const source = ctx.createBufferSource();
+      const gain = ctx.createGain();
+
+      source.buffer = buffer;
+      gain.gain.value = isReset ? 0.95 : 0.82;
+
+      source.connect(gain);
+      gain.connect(masterGain);
+
+      source.start(when);
+      scheduledAudioNodes.push(source);
+    }
+
+    function cancelScheduledAudio() {
+      for (const node of scheduledAudioNodes) {
+        try { node.stop(); } catch (_) {}
+      }
+
+      scheduledAudioNodes = [];
+    }
+
+    function scheduleUpcomingAudio() {
+      if (!running || !audioCtx) return;
+
+      const { eachMs, rc } = getValues();
+      if (eachMs <= 0) return;
+
+      cancelScheduledAudio();
+
+      const elapsedNow = getElapsedMs();
+      const ctxNow = audioCtx.currentTime;
+
+      let boundaryNumber = Math.floor(elapsedNow / eachMs) + 1;
+      let boundaryElapsed = boundaryNumber * eachMs;
+
+      const maxElapsed = elapsedNow + AUDIO_LOOKAHEAD_MS;
+      let scheduledCount = 0;
+
+      while (
+        boundaryElapsed <= maxElapsed &&
+        scheduledCount < MAX_SCHEDULED_EVENTS
+      ) {
+        const delayMs = boundaryElapsed - elapsedNow;
+
+        if (delayMs >= 0) {
+          const isReset = boundaryNumber % rc === 0;
+          const buffer = isReset ? resetBuffer : countBuffer;
+
+          scheduleSound(buffer, ctxNow + (delayMs / 1000), isReset);
+          scheduledCount++;
+        }
+
+        boundaryNumber++;
+        boundaryElapsed = boundaryNumber * eachMs;
+      }
+    }
+
+    function refreshAudioSchedule() {
+      if (!running || !audioCtx) return;
+      scheduleUpcomingAudio();
+    }
+
+    async function unlockAndStartAudioScheduling() {
+      const ctx = ensureAudioContext();
+
+      if (ctx.state !== "running") {
+        try { await ctx.resume(); } catch (_) {}
+      }
+
+      await preloadAudio();
+      scheduleUpcomingAudio();
+
+      if (!audioScheduleTimer) {
+        audioScheduleTimer = window.setInterval(() => {
+          if (running) scheduleUpcomingAudio();
+        }, 30000);
+      }
+    }
+
+    async function startTimer() {
+      const { eachMs } = getValues();
+
+      if (eachMs <= 0) {
+        statusEl.textContent = "Enter a cycle time greater than zero.";
+        return;
+      }
+
+      if (running) return;
+
+      running = true;
+      runStartedAt = performance.now();
+      syncVisualBoundary();
+
+      statusEl.textContent = "Running.";
+      await unlockAndStartAudioScheduling();
+
+      cancelAnimationFrame(animationId);
+      render();
+    }
+
+    function pauseTimer() {
+      if (!running) return;
+
+      baseElapsedMs = getElapsedMs();
+      manualOffsetMs = 0;
+      running = false;
+
+      cancelAnimationFrame(animationId);
+      cancelScheduledAudio();
+
+      statusEl.textContent = "Paused.";
+      updateDisplay();
+    }
+
+    function resetTimer() {
+      running = false;
+      cancelAnimationFrame(animationId);
+      cancelScheduledAudio();
+
+      baseElapsedMs = 0;
+      manualOffsetMs = 0;
+      runStartedAt = performance.now();
+
+      syncVisualBoundary();
+      updateStaticLabels();
+      updateDisplay();
+
+      statusEl.textContent = "Ready.";
+      flashScreen("reset");
+    }
+
+    function adjustTiming(deltaMs, direction) {
+      const currentElapsed = getElapsedMs();
+      const adjustedElapsed = Math.max(0, currentElapsed + deltaMs);
+
+      setElapsedMs(adjustedElapsed);
+      bumpAll(direction);
+      updateDisplay();
+
+      const action = deltaMs > 0 ? "sped up" : "slowed down";
+      statusEl.textContent = `Timing ${action} by ${formatTime(Math.abs(deltaMs))}.`;
+    }
+
+    function changeCount(direction) {
+      const { eachMs, totalMs, rc } = getValues();
+
+      if (eachMs <= 0 || totalMs <= 0) return;
+
+      const elapsed = getElapsedMs();
+      const sequenceNumber = Math.floor(elapsed / totalMs);
+      const sequenceStart = sequenceNumber * totalMs;
+      const sequenceElapsed = mod(elapsed, totalMs);
+
+      const currentCount = Math.floor(sequenceElapsed / eachMs);
+      const withinInterval = mod(sequenceElapsed, eachMs);
+      const newCount = mod(currentCount + direction, rc);
+
+      const newSequenceElapsed = (newCount * eachMs) + withinInterval;
+      const newElapsed = sequenceStart + newSequenceElapsed;
+
+      setElapsedMs(newElapsed);
+      updateDisplay();
+
+      if (newCount === 0) {
+        flashScreen("reset");
+      } else {
+        flashScreen("count");
+      }
+
+      statusEl.textContent = `Count adjusted to ${newCount}.`;
+    }
+
+    function handleInputChange() {
+      updateStaticLabels();
+
+      if (!running) {
+        baseElapsedMs = 0;
+        manualOffsetMs = 0;
+      }
+
+      syncVisualBoundary();
+      updateDisplay();
+      refreshAudioSchedule();
+    }
+
+    startBtn.addEventListener("click", startTimer);
+    pauseBtn.addEventListener("click", pauseTimer);
+    resetBtn.addEventListener("click", resetTimer);
+
+    slowDownBtn.addEventListener("click", () => {
+      adjustTiming(-ADJUST_STEP_MS, "left");
+    });
+
+    speedUpBtn.addEventListener("click", () => {
+      adjustTiming(ADJUST_STEP_MS, "right");
+    });
+
+    countMinusBtn.addEventListener("click", () => changeCount(-1));
+    countPlusBtn.addEventListener("click", () => changeCount(1));
+
+    volumeSlider.addEventListener("input", () => {
+      const value = Number(volumeSlider.value);
+      volumeValue.textContent = `${value}%`;
+
+      if (masterGain && audioCtx) {
+        masterGain.gain.setValueAtTime(value / 100, audioCtx.currentTime);
+      }
+    });
+
+    [atInput, sdInput, bedInput, rcInput].forEach(input => {
+      input.addEventListener("input", handleInputChange);
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        tabStateEl.textContent = "Background tab — audio is pre-scheduled";
+        tabStateEl.classList.add("hidden-warning");
+      } else {
+        tabStateEl.textContent = "Timer tab visible";
+        tabStateEl.classList.remove("hidden-warning");
+
+        updateDisplay();
+        syncVisualBoundary();
+        refreshAudioSchedule();
+      }
+    });
+
+    preloadAudio();
+    updateStaticLabels();
+    updateDisplay();
+  </script>
+</body>
+</html>
