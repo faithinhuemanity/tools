@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RP Time Alarm</title>
+  <title>RF Time Alarm</title>
 
   <style>
     :root {
@@ -343,6 +343,43 @@
       margin-top: 3px;
     }
 
+    .volume-control {
+      margin-top: 12px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .volume-label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .volume-label-row label {
+      margin: 0;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    #volumeValue {
+      font-weight: 800;
+      color: var(--warn);
+      font-variant-numeric: tabular-nums;
+    }
+
+    #volumeSlider {
+      width: 100%;
+      padding: 0;
+      height: 8px;
+      accent-color: var(--warn);
+      cursor: pointer;
+    }
+
     .status-row {
       display: flex;
       gap: 12px;
@@ -428,7 +465,7 @@
   <div id="screenFlash" aria-hidden="true"></div>
 
   <main class="app">
-    <h1>RP Time Alarm</h1>
+    <h1>RF Time Alarm</h1>
     <div class="subtitle">AT + SD + BED = time for each cycle. RC controls the full reset.</div>
 
     <section class="grid">
@@ -511,15 +548,31 @@
     </section>
 
     <section class="timing-adjustments">
-      <button class="bumpable" id="speedUpBtn">
-        ◀ SPEED UP
-        <span>subtract 0.250 sec</span>
-      </button>
-
       <button class="bumpable" id="slowDownBtn">
-        SLOW DOWN ▶
+        ◀ SLOW DOWN
         <span>add 0.250 sec</span>
       </button>
+
+      <button class="bumpable" id="speedUpBtn">
+        SPEED UP ▶
+        <span>subtract 0.250 sec</span>
+      </button>
+    </section>
+
+    <section class="volume-control bumpable">
+      <div class="volume-label-row">
+        <label for="volumeSlider">VOLUME</label>
+        <span id="volumeValue">75%</span>
+      </div>
+      <input
+        id="volumeSlider"
+        type="range"
+        min="0"
+        max="100"
+        step="1"
+        value="75"
+        aria-label="Alarm volume"
+      />
     </section>
 
     <div class="status-row">
@@ -562,6 +615,8 @@
     const slowDownBtn = document.getElementById("slowDownBtn");
     const countMinusBtn = document.getElementById("countMinusBtn");
     const countPlusBtn = document.getElementById("countPlusBtn");
+    const volumeSlider = document.getElementById("volumeSlider");
+    const volumeValue = document.getElementById("volumeValue");
 
     let running = false;
     let runStartedAt = 0;
@@ -571,6 +626,7 @@
     let lastVisualBoundary = 0;
 
     let audioCtx = null;
+    let masterGain = null;
     let countBuffer = null;
     let resetBuffer = null;
     let scheduledAudioNodes = [];
@@ -760,6 +816,10 @@
       if (!audioCtx) {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         audioCtx = new AudioContext();
+
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = Number(volumeSlider.value) / 100;
+        masterGain.connect(audioCtx.destination);
       }
 
       return audioCtx;
@@ -806,7 +866,7 @@
           const gain = ctx.createGain();
 
           oscillator.connect(gain);
-          gain.connect(ctx.destination);
+          gain.connect(masterGain);
 
           oscillator.frequency.value = frequency;
           gain.gain.value = 0.16;
@@ -825,7 +885,7 @@
       const gain = ctx.createGain();
 
       oscillator.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(masterGain);
 
       oscillator.frequency.value = 880;
       gain.gain.value = 0.14;
@@ -851,7 +911,7 @@
       gain.gain.value = isReset ? 0.95 : 0.82;
 
       source.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(masterGain);
 
       source.start(when);
       scheduledAudioNodes.push(source);
@@ -1033,16 +1093,25 @@
     pauseBtn.addEventListener("click", pauseTimer);
     resetBtn.addEventListener("click", resetTimer);
 
-    speedUpBtn.addEventListener("click", () => {
-      adjustTiming(ADJUST_STEP_MS, "left");
+    slowDownBtn.addEventListener("click", () => {
+      adjustTiming(-ADJUST_STEP_MS, "left");
     });
 
-    slowDownBtn.addEventListener("click", () => {
-      adjustTiming(-ADJUST_STEP_MS, "right");
+    speedUpBtn.addEventListener("click", () => {
+      adjustTiming(ADJUST_STEP_MS, "right");
     });
 
     countMinusBtn.addEventListener("click", () => changeCount(-1));
     countPlusBtn.addEventListener("click", () => changeCount(1));
+
+    volumeSlider.addEventListener("input", () => {
+      const value = Number(volumeSlider.value);
+      volumeValue.textContent = `${value}%`;
+
+      if (masterGain && audioCtx) {
+        masterGain.gain.setValueAtTime(value / 100, audioCtx.currentTime);
+      }
+    });
 
     [atInput, sdInput, bedInput, rcInput].forEach(input => {
       input.addEventListener("input", handleInputChange);
