@@ -205,7 +205,7 @@
       position: relative;
       height: 24px;
       border: 1px solid var(--border);
-      background: #091018;
+      background: #000000;
       border-radius: 999px;
       overflow: visible;
       box-shadow: inset 0 0 0 2px rgba(255,255,255,0.02);
@@ -216,7 +216,7 @@
       inset: 0 auto 0 0;
       width: 0%;
       border-radius: inherit;
-      background: linear-gradient(90deg, #d9a900 0%, var(--warn) 70%, #fff0a3 100%);
+      background: #ffffff;
       transition: width 80ms linear;
       overflow: hidden;
     }
@@ -343,6 +343,43 @@
       margin-top: 3px;
     }
 
+    .volume-control {
+      margin-top: 12px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .volume-label-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .volume-label-row label {
+      margin: 0;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    #volumeValue {
+      font-weight: 800;
+      color: var(--warn);
+      font-variant-numeric: tabular-nums;
+    }
+
+    #volumeSlider {
+      width: 100%;
+      padding: 0;
+      height: 8px;
+      accent-color: var(--warn);
+      cursor: pointer;
+    }
+
     .status-row {
       display: flex;
       gap: 12px;
@@ -421,13 +458,29 @@
         transition-duration: 0.001ms !important;
       }
     }
+  
+/* Cotton candy visual layer: no changes to timer calculations or audio. */
+.progress-dot.cotton-roll{width:48px;height:48px;border:0;border-radius:0;background:none;box-shadow:none;transition:none;pointer-events:none;filter:drop-shadow(0 0 8px #ffffff66)}
+.cotton-spin{width:100%;height:100%;animation:cotton-spin 1.6s linear infinite;transform-origin:center}
+.cotton-spin svg{width:100%;height:100%;display:block;overflow:visible}
+@keyframes cotton-spin{to{transform:rotate(360deg)}}
+.progress-panel.reset-pop .progress-dot.cotton-roll{animation:none;background:none;border:0;box-shadow:none}
+#screenFlash.count-flash,#screenFlash.reset-flash{animation:none;opacity:0}
+#fxCanvas{position:fixed;inset:0;z-index:1000;pointer-events:none;width:100%;height:100%}
+.main-shell.fx-hidden{opacity:.08;filter:blur(9px);transform:scale(.985)}
+.main-shell{transition:opacity .52s ease,filter .52s ease,transform .52s ease}
+.main-shell.fx-return{animation:fx-return .62s cubic-bezier(.18,.8,.3,1) both}
+@keyframes fx-return{from{opacity:0;filter:blur(12px);transform:translateY(13px) scale(.985)}to{opacity:1;filter:blur(0);transform:translateY(0) scale(1)}}
+@media(prefers-reduced-motion:reduce){.cotton-spin{animation:none}.main-shell.fx-return{animation:none}}
+
   </style>
 </head>
 
 <body>
+  <canvas id="fxCanvas" aria-hidden="true"></canvas>
   <div id="screenFlash" aria-hidden="true"></div>
 
-  <main class="app">
+  <main class="app main-shell">
     <h1>Cycle Timer</h1>
     <div class="subtitle">AT + SD + BED = time for each cycle. RC controls the full reset.</div>
 
@@ -500,7 +553,7 @@
       <div class="progress-track" id="progressTrack">
         <div class="progress-fill" id="progressFill"></div>
         <div id="progressMarkers"></div>
-        <div class="progress-dot" id="progressDot"></div>
+        <div class="progress-dot cotton-roll" id="progressDot"><div class="cotton-spin"><svg viewBox="0 0 100 100" aria-label="Rolling white cotton candy"><defs><radialGradient id="cot"><stop stop-color="#fff"/><stop offset=".68" stop-color="#f5f7fa"/><stop offset="1" stop-color="#c9d1de"/></radialGradient><filter id="fluff"><feTurbulence type="fractalNoise" baseFrequency=".13" numOctaves="3" seed="8" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="7"/></filter></defs><circle cx="50" cy="50" r="42" fill="url(#cot)" filter="url(#fluff)"/><g fill="none" stroke-linecap="round"><path d="M19 48 Q31 24 51 31 T79 42 M20 61 Q39 42 55 57 T78 60 M32 77 Q40 62 57 71 T70 74 M30 36 Q42 20 58 31" stroke="#fff" stroke-width="5" opacity=".9"/><path d="M24 52 Q39 33 56 43 T79 49 M24 66 Q42 52 55 65 T75 69 M35 28 Q52 15 67 33" stroke="#e6eaf1" stroke-width="3" opacity=".8"/></g></svg></div></div>
       </div>
     </section>
 
@@ -511,15 +564,31 @@
     </section>
 
     <section class="timing-adjustments">
-      <button class="bumpable" id="speedUpBtn">
-        ◀ SPEED UP
-        <span>subtract 0.250 sec</span>
-      </button>
-
       <button class="bumpable" id="slowDownBtn">
-        SLOW DOWN ▶
+        ◀ SLOW DOWN
         <span>add 0.250 sec</span>
       </button>
+
+      <button class="bumpable" id="speedUpBtn">
+        SPEED UP ▶
+        <span>subtract 0.250 sec</span>
+      </button>
+    </section>
+
+    <section class="volume-control bumpable">
+      <div class="volume-label-row">
+        <label for="volumeSlider">VOLUME</label>
+        <span id="volumeValue">75%</span>
+      </div>
+      <input
+        id="volumeSlider"
+        type="range"
+        min="0"
+        max="100"
+        step="1"
+        value="75"
+        aria-label="Alarm volume"
+      />
     </section>
 
     <div class="status-row">
@@ -562,6 +631,8 @@
     const slowDownBtn = document.getElementById("slowDownBtn");
     const countMinusBtn = document.getElementById("countMinusBtn");
     const countPlusBtn = document.getElementById("countPlusBtn");
+    const volumeSlider = document.getElementById("volumeSlider");
+    const volumeValue = document.getElementById("volumeValue");
 
     let running = false;
     let runStartedAt = 0;
@@ -571,6 +642,7 @@
     let lastVisualBoundary = 0;
 
     let audioCtx = null;
+    let masterGain = null;
     let countBuffer = null;
     let resetBuffer = null;
     let scheduledAudioNodes = [];
@@ -703,19 +775,8 @@
     }
 
     function flashScreen(type) {
-      screenFlash.classList.remove("count-flash", "reset-flash");
-      void screenFlash.offsetWidth;
-      screenFlash.classList.add(type === "reset" ? "reset-flash" : "count-flash");
-
-      if (type === "reset") {
-        progressPanel.classList.remove("reset-pop");
-        void progressPanel.offsetWidth;
-        progressPanel.classList.add("reset-pop");
-
-        window.setTimeout(() => {
-          progressPanel.classList.remove("reset-pop");
-        }, 900);
-      }
+      if (type === "reset") launchRocketFx();
+      else burstCottonFx();
     }
 
     function syncVisualBoundary() {
@@ -760,13 +821,17 @@
       if (!audioCtx) {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         audioCtx = new AudioContext();
+
+        masterGain = audioCtx.createGain();
+        masterGain.gain.value = Number(volumeSlider.value) / 100;
+        masterGain.connect(audioCtx.destination);
       }
 
       return audioCtx;
     }
 
     async function fetchAudioBuffer(url) {
-      const response = await fetch(url, { cache: "force-cache" });
+      const response = await fetch(url, { cache: "no-store" });
 
       if (!response.ok) {
         throw new Error(`Could not load ${url}`);
@@ -806,7 +871,7 @@
           const gain = ctx.createGain();
 
           oscillator.connect(gain);
-          gain.connect(ctx.destination);
+          gain.connect(masterGain);
 
           oscillator.frequency.value = frequency;
           gain.gain.value = 0.16;
@@ -825,7 +890,7 @@
       const gain = ctx.createGain();
 
       oscillator.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(masterGain);
 
       oscillator.frequency.value = 880;
       gain.gain.value = 0.14;
@@ -851,7 +916,7 @@
       gain.gain.value = isReset ? 0.95 : 0.82;
 
       source.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(masterGain);
 
       source.start(when);
       scheduledAudioNodes.push(source);
@@ -1033,16 +1098,25 @@
     pauseBtn.addEventListener("click", pauseTimer);
     resetBtn.addEventListener("click", resetTimer);
 
-    speedUpBtn.addEventListener("click", () => {
-      adjustTiming(ADJUST_STEP_MS, "left");
+    slowDownBtn.addEventListener("click", () => {
+      adjustTiming(-ADJUST_STEP_MS, "left");
     });
 
-    slowDownBtn.addEventListener("click", () => {
-      adjustTiming(-ADJUST_STEP_MS, "right");
+    speedUpBtn.addEventListener("click", () => {
+      adjustTiming(ADJUST_STEP_MS, "right");
     });
 
     countMinusBtn.addEventListener("click", () => changeCount(-1));
     countPlusBtn.addEventListener("click", () => changeCount(1));
+
+    volumeSlider.addEventListener("input", () => {
+      const value = Number(volumeSlider.value);
+      volumeValue.textContent = `${value}%`;
+
+      if (masterGain && audioCtx) {
+        masterGain.gain.setValueAtTime(value / 100, audioCtx.currentTime);
+      }
+    });
 
     [atInput, sdInput, bedInput, rcInput].forEach(input => {
       input.addEventListener("input", handleInputChange);
@@ -1065,6 +1139,29 @@
     preloadAudio();
     updateStaticLabels();
     updateDisplay();
+  
+    // Visual effects are independent of timer clock and scheduled alarm audio.
+    const fxCanvas=document.getElementById('fxCanvas');
+    const fxCtx=fxCanvas.getContext('2d');
+    const fxShell=document.querySelector('.main-shell');
+    const reducedMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let fxW=0,fxH=0,fxDpr=1,fxParticles=[],fxPhase='roll',fxElapsed=0,fxRocketX=0,fxRocketY=0,fxFlameHeight=0,fxLast=performance.now();
+    function sizeFx(){fxDpr=Math.min(devicePixelRatio||1,2);fxW=innerWidth;fxH=innerHeight;fxCanvas.width=fxW*fxDpr;fxCanvas.height=fxH*fxDpr;fxCtx.setTransform(fxDpr,0,0,fxDpr,0,0)}
+    window.addEventListener('resize',sizeFx);sizeFx();
+    function dustAt(x,y,n,burst){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,sp=burst?75+Math.random()*320:15+Math.random()*75;fxParticles.push({x,y,vx:Math.cos(a)*sp,vy:burst?Math.sin(a)*sp-75:25+Math.random()*80,r:.4+Math.pow(Math.random(),2)*4.2,life:burst?.8+Math.random()*1.35:1.4+Math.random()*1.8,age:0,alpha:.25+Math.random()*.7,twirl:(Math.random()-.5)*4,shape:Math.random(),angle:Math.random()*6.28,rot:(Math.random()-.5)*5})}}
+    function burstCottonFx(){if(fxPhase==='rocket'||fxPhase==='wash')return;const r=progressDot.getBoundingClientRect();dustAt(r.left+r.width/2,r.top+r.height/2,reducedMotion?45:300,true);for(let i=0;i<(reducedMotion?25:240);i++)dustAt(Math.random()*fxW,-Math.random()*fxH*.8,1,false);fxPhase='dust';fxElapsed=0;progressDot.style.opacity='0'}
+    function launchRocketFx(){const r=progressDot.getBoundingClientRect();fxRocketX=r.left+r.width/2;fxRocketY=r.top+r.height/2;fxFlameHeight=0;fxPhase='rocket';fxElapsed=0;progressDot.style.opacity='0';fxShell?.classList.add('fx-hidden')}
+    function drawFxRocket(x,y){fxCtx.save();fxCtx.translate(x,y);fxCtx.fillStyle='#f3f6fb';fxCtx.beginPath();fxCtx.moveTo(0,-45);fxCtx.quadraticCurveTo(20,-22,16,8);fxCtx.lineTo(16,29);fxCtx.lineTo(-16,29);fxCtx.lineTo(-16,8);fxCtx.quadraticCurveTo(-20,-22,0,-45);fxCtx.fill();fxCtx.fillStyle='#cfdae7';fxCtx.fillRect(-13,5,26,5);fxCtx.fillStyle='#f85b40';fxCtx.beginPath();fxCtx.moveTo(-16,14);fxCtx.lineTo(-28,38);fxCtx.lineTo(-13,30);fxCtx.moveTo(16,14);fxCtx.lineTo(28,38);fxCtx.lineTo(13,30);fxCtx.fill();fxCtx.fillStyle='#1a283a';fxCtx.beginPath();fxCtx.arc(0,-7,8,0,Math.PI*2);fxCtx.fill();fxCtx.fillStyle='#8bd5fc';fxCtx.beginPath();fxCtx.arc(-2,-9,4,0,Math.PI*2);fxCtx.fill();fxCtx.restore()}
+    function fxFrame(now){let dt=Math.min((now-fxLast)/1000,.05);fxLast=now;fxCtx.clearRect(0,0,fxW,fxH);
+      const {eachMs,rc}=getValues();if(eachMs>0&&rc>0){const sequenceElapsed=mod(getElapsedMs(),eachMs*rc);const intervalIndex=Math.floor(sequenceElapsed/eachMs);const portion=mod(sequenceElapsed,eachMs)/eachMs;const sz=48+intervalIndex*12+12*portion;progressDot.style.width=sz+'px';progressDot.style.height=sz+'px'}
+      if(fxPhase==='dust'||fxPhase==='rocket'||fxPhase==='wash')fxElapsed+=dt;
+      if(fxPhase==='dust'&&fxElapsed>1.65){fxPhase='roll';progressDot.style.opacity='1'}
+      if(fxPhase==='rocket'){fxRocketY-=dt*(240+fxElapsed*390);fxFlameHeight=Math.min(fxH*1.6,fxFlameHeight+dt*(260+fxElapsed*950));if(fxElapsed>2.15){fxPhase='wash';fxElapsed=0;fxShell?.classList.remove('fx-hidden');fxShell?.classList.add('fx-return')}}
+      if(fxPhase==='wash'&&fxElapsed>.66){fxPhase='roll';progressDot.style.opacity='1';fxShell?.classList.remove('fx-return')}
+      for(let i=fxParticles.length-1;i>=0;i--){const p=fxParticles[i];p.age+=dt;p.vy+=dt*100;p.x+=(p.vx+Math.sin(p.age*5)*p.twirl*25)*dt;p.y+=p.vy*dt;if(p.age>=p.life){fxParticles.splice(i,1);continue}fxCtx.globalAlpha=p.alpha*Math.pow(1-p.age/p.life,1.2);fxCtx.save();fxCtx.translate(p.x,p.y);fxCtx.rotate(p.angle+p.age*p.rot);fxCtx.fillStyle=p.shape>.85?'#d5deec':'#f8fbff';fxCtx.beginPath();if(p.shape>.62)fxCtx.ellipse(0,0,p.r*.5,p.r*2.6,0,0,Math.PI*2);else fxCtx.arc(0,0,p.r,0,Math.PI*2);fxCtx.fill();fxCtx.restore()}fxCtx.globalAlpha=1;
+      if(fxPhase==='rocket'||fxPhase==='wash'){const progress=fxPhase==='wash'?1:Math.min(1,fxElapsed/1.8),base=fxH+20,top=fxPhase==='wash'?-fxH*.2:base-fxFlameHeight;const grad=fxCtx.createLinearGradient(0,top,0,base);grad.addColorStop(0,'rgba(255,245,180,.95)');grad.addColorStop(.28,'rgba(255,215,74,.96)');grad.addColorStop(.7,'rgba(255,112,24,.98)');grad.addColorStop(1,'rgba(220,42,10,.98)');fxCtx.globalAlpha=fxPhase==='wash'?Math.pow(Math.max(0,1-fxElapsed/.66),2):1;fxCtx.fillStyle=grad;fxCtx.beginPath();fxCtx.moveTo(fxRocketX,Math.min(fxH,fxRocketY+25));const t=Math.max(top,Math.min(fxH,fxRocketY+28));fxCtx.lineTo(fxRocketX-(35+progress*fxW*.9),t+45);fxCtx.lineTo(-fxW*.25,base);fxCtx.lineTo(fxW*1.25,base);fxCtx.lineTo(fxRocketX+(35+progress*fxW*.9),t+45);fxCtx.closePath();fxCtx.fill();fxCtx.globalAlpha=1;if(fxPhase==='rocket'&&fxRocketY>-90)drawFxRocket(fxRocketX,fxRocketY);if(fxPhase==='wash'){fxCtx.fillStyle='rgba(255,248,226,'+Math.pow(Math.max(0,1-fxElapsed/.66),2)*.96+')';fxCtx.fillRect(0,0,fxW,fxH)}}
+      requestAnimationFrame(fxFrame)}requestAnimationFrame(fxFrame);
+
   </script>
 </body>
 </html>
