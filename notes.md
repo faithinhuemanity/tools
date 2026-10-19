@@ -24,3 +24,12 @@ https://www.amazon.com/Kids-Guitar-Set-Montessori-Instruments/dp/B0GXXTBGXT/ref=
 
 trumpet
 https://www.amazon.com/Toddler-Instruments-Harmonica-Recorder-Children/dp/B0F8LV4882/ref=sr_1_11?crid=LT3QHZXEZAMR&dib=eyJ2IjoiMSJ9.egsbsY6eoNtrXOKOm27V8QL8cVVACJJwhHkg7WgENspenP_hPSLOCYedO88aZOWM9oYDde-M2u2L4a-Kse_8pk2VU2EUlO-n8dmycdEu0kiepAe1O6WKKPGCYYQTNr8EhpJIspC0e9QgX_MeY07YJPI3nXb-P5HrOqmR1my9eZjFQlR0SfpXSNptQxdP8pPWEm9W-EfA08grWcF5zY9Y5dRmMeCyRhK_PXm5GfYpKv876jHvfhygnEEI5ByyPkHMzYKMvQed8oImVzvwQb7RnjJ4KlwecZKQDDXceXiVJjY.t-4lBq1HuYvxuqdIgmG05KKzOhR_aVuJnG4p56leXV8&dib_tag=se&keywords=toddler+flute&qid=1792370545&sprefix=toddler+flute%2Caps%2C187&sr=8-11
+
+palydough
+https://www.amazon.com/dp/B0C3528VHM?aref=hX8qyewaYr&aaxitk=7d538fa17752d9b2ab06a499fb1228cb&language=en_US&pd_rd_plhdr=t&ref=dacx_dp_581610445792850531_579078460507218942
+
+talking cactus
+https://www.amazon.com/dp/B0GK1QQPPR/ref=sspa_dk_detail_0?pd_rd_i=B0CYLQNNCH&pd_rd_w=UJatx&content-id=amzn1.sym.3bc66c0a-cc61-4816-aa2d-e53327eaddb6&pf_rd_p=3bc66c0a-cc61-4816-aa2d-e53327eaddb6&pf_rd_r=5T9ARZGD9JHWYXJ1KWHY&pd_rd_wg=SCmrq&pd_rd_r=c55e0cc5-6b52-42f3-a226-41657660b9f5&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWxfdGhlbWF0aWM&th=1
+
+electric scooter
+https://www.amazon.com/gp/aw/d/B0D41CLW4T?pd_rd_plhdr=t&hsa_cr_id=0&qid=1792379361&sr=1-2-fec03104-6f11-4242-8f79-15fae2896f66&i=aps&aref=f4WyhZXKEN&_encoding=UTF8&pd_rd_i=B0D41CLW4T&ref_=sbx_be_s_sparkle_ssd_img&qid=&pd_rd_w=qCF6B&content-id=amzn1.sym.22e060df-ce87-467b-805a-61b8bd37fbe9%3Aamzn1.sym.22e060df-ce87-467b-805a-61b8bd37fbe9&pf_rd_p=22e060df-ce87-467b-805a-61b8bd37fbe9&pf_rd_r=4C67JNQRADVXW1SR3F7M&pd_rd_wg=WKT1x&pd_rd_r=4e83ff9e-69fe-4484-b1f2-0f04f8fa50ef
