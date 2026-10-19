@@ -1,3 +1,26 @@
 Audio Settings and Code TricksUse short audio files: Keep sound effects tiny so they load fast.Lower the sample rate: Use 22kHz or 11kHz instead of 44.1kHz to reduce data size.Compress audio files: Use MP3 or OGG formats to make files smaller.Preload audio elements: Load sound files when the page opens so they play instantly.Use Web Audio API: Schedule sounds with AudioContext for exact timing control.Design and User Experience TricksPlay silent audio: Keep a silent audio track running to stop Bluetooth speakers from sleeping.Add visual cues: Show buttons or animations the moment the user clicks, before the sound arrives.Adjust game logic: Shift game events slightly backward in time to match the delayed sound.
 
 Actually, I peeped, yes the bluetooth sound is delayed, think its 100 - 250ms latency which isnt enough to make it not work. The issue may be when the tab is out of focus. Ex: It'll work fine when the tab is in focus on another window in the background
+
+
+
+
+Venegas Christ: 
+
+https://www.amazon.com/Wesiti-Highland-Figurines-Scottish-Christmas/dp/B0F9WJQV6F/ref=sxin_12_pa_sp_search_thematic_sspa?content-id=amzn1.sym.56887b42-7f05-4f9e-a56f-c401bbb6a8f2%3Aamzn1.sym.56887b42-7f05-4f9e-a56f-c401bbb6a8f2&crid=2I8IB8QGX0U4C&cv_ct_cx=highland%2Bcow%2Bstatue&keywords=highland%2Bcow%2Bstatue&pd_rd_i=B0F9WJQV6F&pd_rd_r=d3f78c62-9c1b-4957-b4d6-58efe30c4dc4&pd_rd_w=wHpb4&pd_rd_wg=PnJTw&pf_rd_p=56887b42-7f05-4f9e-a56f-c401bbb6a8f2&pf_rd_r=EDFN49A291ENM2J0VC05&qid=1792222894&sbo=RZvfv%2F%2FHxDF%2BO5021pAnSA%3D%3D&sprefix=highland%2Bcow%2Bstatue%2Caps%2C112&sr=1-3-7efdef4d-9875-47e1-927f-8c2c1c47ed49-spons&aref=lAnWFsMHMx&sp_csd=d2lkZ2V0TmFtZT1zcF9zZWFyY2hfdGhlbWF0aWM&th=1
+
+https://www.amazon.com/Ayadon-Figurines-Sculpture-Housewarming-Valentines/dp/B0FL7MXKJV/ref=sr_1_7?crid=2I8IB8QGX0U4C&dib=eyJ2IjoiMSJ9.JhMTst1Lpezac6isO1UDgREfJA9cH0XTbDGOTVgOLp7g2bNU9ozIqsGXJVoZnH5Ov1L1RjFTQdo_nOQqWrs47FZ_t1KOg9JagJBPJE-bhuJvVFEVApReUyDd5XgsQNG5mLHx3wPFW-FZFsffizyR8xeNnmS2TFJmKHLhtJ2_43jIIpTXbTZP4mcqSiuIGrooKMIrgBWxDhbdBbjO8QOeFe-4tPhqPfTdsHhFDSFu9lpgu0T76fyirRXirJvlLY6fiDPrmKiLo20xUIHPs2GQ6sXd-EWWP6pY7_4qdLsWSC0.DuUgdjprvTmD8eYUeYPd7Z_RnFwpHVNlMiFCaPdmWKM&dib_tag=se&keywords=highland%2Bcow%2Bstatue&qid=1792222894&sprefix=highland%2Bcow%2Bstatue%2Caps%2C112&sr=8-7&th=1
+
+https://www.amazon.com/TISEJOY-Highland-Statues-Windowsill-Backyard/dp/B0GF1GBF4N/ref=sr_1_4_sspa?crid=2I8IB8QGX0U4C&dib=eyJ2IjoiMSJ9.JhMTst1Lpezac6isO1UDgREfJA9cH0XTbDGOTVgOLp7g2bNU9ozIqsGXJVoZnH5Ov1L1RjFTQdo_nOQqWrs47FZ_t1KOg9JagJBPJE-bhuJvVFEVApReUyDd5XgsQNG5mLHx3wPFW-FZFsffizyR8xeNnmS2TFJmKHLhtJ2_43jIIpTXbTZP4mcqSiuIGrooKMIrgBWxDhbdBbjO8QOeFe-4tPhqPfTdsHhFDSFu9lpgu0T76fyirRXirJvlLY6fiDPrmKiLo20xUIHPs2GQ6sXd-EWWP6pY7_4qdLsWSC0.DuUgdjprvTmD8eYUeYPd7Z_RnFwpHVNlMiFCaPdmWKM&dib_tag=se&keywords=highland%2Bcow%2Bstatue&qid=1792222894&sprefix=highland%2Bcow%2Bstatue%2Caps%2C112&sr=8-4-spons&sp_csd=d2lkZ2V0TmFtZT1zcF9hdGY&th=1
+
+https://www.amazon.com/Karenhi-Highland-Figurines-Bathroom-Statues/dp/B0H2YFT44F/ref=sr_1_30?crid=13BZY5J08TEAJ&dib=eyJ2IjoiMSJ9.blK4bxFee048wBtIUfvgUksi9coh8y6uvQjQ6-Oa37avO3Vka7B-jywTlBEh2V-rcO4fIYN5cAtUVzjcJ7dp6eKMF6JR5__Jtj9w39ByuWypPBZYRNqWCUav1ZaDAHHvDv8WCiiDbkUcFy0j-gC-fGBC3ukv4c8yhrQ98V9A04Pw2S9r0E0LCx3m1iyKZMj0BXT8cDohaPLP_knLf2FayhmroztDU9pvBoV5suvFFKflc0h1caJNNPQpzhFafTHZi5jZhSXCQfhXpn8GBnUzTF8462CsUR8WP_IToEybNsA.kCzJ7nKQQs9GlOFasVyxTDfYE8L2cfLvPFUzBlpshGw&dib_tag=se&keywords=cow%2Bwith%2Bbangs%2Bsculpture&qid=1792222143&sprefix=cow%2Bwith%2Bbangs%2Bsculpture%2Caps%2C92&sr=8-30&th=1
+
+Melo:
+bubble gun
+https://www.amazon.com/Dinosaur-Bubble-Girls-Outdoor-Machine/dp/B0GK8NMY7Z/ref=sr_1_20_sspa?crid=1YQ2ZUYA11GM6&dib=eyJ2IjoiMSJ9.-jbqsvubcjfC0eFh6koo5I6Myhs-82JJ9KEuZfKe9DKbVRBHEafHrK32OCxtOEi2h2nAPMUnFiZuMbLK_VY1U9iEOtJcimhOrZyidQixdxATZC99liUlEjns80z2WOpRud3Ck46mow32pod9TJyZSaJwAzMx2yXYJAbi8NUnb1JVdNWWs03VREWVgkuQrizxTwDiLkDOpoNBblD-Hh5hlxogn1W7zlAEi1nDyeUXpY_Y3ZZMgdIe2J14ppNKYT4VTvQmIPxuvq_jHfPWwf_0gNyJQzeqviShRdNqz8hycaw.BDhumi9FA3A2TlWZXIAVZUusI_fnFq1KrWhTQfP--wY&dib_tag=se&keywords=bubble%2Bgun&qid=1792370962&sprefix=bubble%2Bgun%2Caps%2C202&sr=8-20-spons&sp_csd=d2lkZ2V0TmFtZT1zcF9tdGY&th=1
+
+guitar set
+https://www.amazon.com/Kids-Guitar-Set-Montessori-Instruments/dp/B0GXXTBGXT/ref=sr_1_14_sspa?crid=LT3QHZXEZAMR&dib=eyJ2IjoiMSJ9.egsbsY6eoNtrXOKOm27V8QL8cVVACJJwhHkg7WgENspenP_hPSLOCYedO88aZOWM9oYDde-M2u2L4a-Kse_8pk2VU2EUlO-n8dmycdEu0kiepAe1O6WKKPGCYYQTNr8EhpJIspC0e9QgX_MeY07YJPI3nXb-P5HrOqmR1my9eZjFQlR0SfpXSNptQxdP8pPWEm9W-EfA08grWcF5zY9Y5dRmMeCyRhK_PXm5GfYpKv876jHvfhygnEEI5ByyPkHMzYKMvQed8oImVzvwQb7RnjJ4KlwecZKQDDXceXiVJjY.t-4lBq1HuYvxuqdIgmG05KKzOhR_aVuJnG4p56leXV8&dib_tag=se&keywords=toddler%2Bflute&qid=1792370545&sprefix=toddler%2Bflute%2Caps%2C187&sr=8-14-spons&sp_csd=d2lkZ2V0TmFtZT1zcF9tdGY&th=1
+
+trumpet
+https://www.amazon.com/Toddler-Instruments-Harmonica-Recorder-Children/dp/B0F8LV4882/ref=sr_1_11?crid=LT3QHZXEZAMR&dib=eyJ2IjoiMSJ9.egsbsY6eoNtrXOKOm27V8QL8cVVACJJwhHkg7WgENspenP_hPSLOCYedO88aZOWM9oYDde-M2u2L4a-Kse_8pk2VU2EUlO-n8dmycdEu0kiepAe1O6WKKPGCYYQTNr8EhpJIspC0e9QgX_MeY07YJPI3nXb-P5HrOqmR1my9eZjFQlR0SfpXSNptQxdP8pPWEm9W-EfA08grWcF5zY9Y5dRmMeCyRhK_PXm5GfYpKv876jHvfhygnEEI5ByyPkHMzYKMvQed8oImVzvwQb7RnjJ4KlwecZKQDDXceXiVJjY.t-4lBq1HuYvxuqdIgmG05KKzOhR_aVuJnG4p56leXV8&dib_tag=se&keywords=toddler+flute&qid=1792370545&sprefix=toddler+flute%2Caps%2C187&sr=8-11
