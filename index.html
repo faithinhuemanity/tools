@@ -516,7 +516,7 @@ button:hover{box-shadow:0 0 13px #fff,0 0 30px #ffffff7c!important;background:rg
   <div id="screenFlash" aria-hidden="true"></div>
 
   <main class="app main-shell">
-    <h1>RP Timer v3.1</h1>
+    <h1>RP Timer</h1>
     <div class="subtitle">AT + SD + BED = time for each cycle. RC controls the full reset.</div>
 
     <section class="grid">
@@ -701,7 +701,7 @@ button:hover{box-shadow:0 0 13px #fff,0 0 30px #ffffff7c!important;background:rg
     }
 
     function getElapsedMs() {
-      const movingMs = running ? (performance.now() - runStartedAt) : 0;
+      const movingMs = running ? (Date.now() - runStartedAt) : 0;
       return Math.max(0, baseElapsedMs + movingMs + manualOffsetMs);
     }
 
@@ -711,7 +711,7 @@ button:hover{box-shadow:0 0 13px #fff,0 0 30px #ffffff7c!important;background:rg
       manualOffsetMs = 0;
 
       if (running) {
-        runStartedAt = performance.now();
+        runStartedAt = Date.now();
       }
 
       syncVisualBoundary();
@@ -845,11 +845,25 @@ button:hover{box-shadow:0 0 13px #fff,0 0 30px #ffffff7c!important;background:rg
       }
     }
 
+    let clockTimer = null;
+
+    function ensureClock() {
+      if (clockTimer) return;
+      clockTimer = setInterval(() => {
+        if (!running) return;
+        updateDisplay();
+        checkVisualBoundary();
+        if (audioCtx && audioCtx.state === "suspended") {
+          audioCtx.resume().catch(() => {});
+        }
+      }, 250);
+    }
+
     function render() {
       updateDisplay();
       checkVisualBoundary();
 
-      if (running) {
+      if (running && !document.hidden) {
         animationId = requestAnimationFrame(render);
       }
     }
@@ -1036,7 +1050,8 @@ button:hover{box-shadow:0 0 13px #fff,0 0 30px #ffffff7c!important;background:rg
       if (running) return;
 
       running = true;
-      runStartedAt = performance.now();
+      runStartedAt = Date.now();
+      ensureClock();
       syncVisualBoundary();
 
       statusEl.textContent = "Running.";
@@ -1067,7 +1082,7 @@ button:hover{box-shadow:0 0 13px #fff,0 0 30px #ffffff7c!important;background:rg
 
       baseElapsedMs = 0;
       manualOffsetMs = 0;
-      runStartedAt = performance.now();
+      runStartedAt = Date.now();
 
       syncVisualBoundary();
       updateStaticLabels();
@@ -1161,8 +1176,12 @@ button:hover{box-shadow:0 0 13px #fff,0 0 30px #ffffff7c!important;background:rg
 
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
-        tabStateEl.textContent = "Background tab — audio is pre-scheduled";
+        tabStateEl.textContent = "Background tab — clock keeps running";
         tabStateEl.classList.add("hidden-warning");
+        if (running) ensureClock();
+        if (audioCtx && audioCtx.state === "suspended") {
+          audioCtx.resume().catch(() => {});
+        }
       } else {
         tabStateEl.textContent = "Timer tab visible";
         tabStateEl.classList.remove("hidden-warning");
@@ -1170,6 +1189,10 @@ button:hover{box-shadow:0 0 13px #fff,0 0 30px #ffffff7c!important;background:rg
         updateDisplay();
         syncVisualBoundary();
         refreshAudioSchedule();
+        if (running) {
+          cancelAnimationFrame(animationId);
+          render();
+        }
       }
     });
 
